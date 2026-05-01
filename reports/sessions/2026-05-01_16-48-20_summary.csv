@@ -1,0 +1,2 @@
+session_date,duration_seconds,total_frames,avg_ear,avg_mar,blink_count,yawn_count,head_alert_count,drowsy_frames,drowsy_percent,yawn_frames,distracted_frames,distracted_percent,phone_frames,avg_fatigue_score,max_fatigue_score,risk_level
+2026-05-01 16:51:15,174.7,1956,0.258,0.083,30,2,3,321,16.4,63,403,20.6,4,13.2,73.1,LOW

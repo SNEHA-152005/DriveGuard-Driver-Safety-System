@@ -1,0 +1,78 @@
+# Driver Safety System v5 — Full Dependencies
+# Install: pip install -r requirements.txt
+
+# Core CV
+opencv-python>=4.8.0
+mediapipe>=0.10.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Object detection
+ultralytics>=8.0.0
+
+# Voice alerts
+pyttsx3>=2.90
+pywin32>=300
+
+# Web dashboard
+flask>=3.0.0
+
+# Graphs
+matplotlib>=3.7.0
+
+# Config + HTTP
+PyYAML>=6.0
+requests>=2.28.0
+
+# Emergency alerts (built-in):
+# smtplib — Python built-in (Gmail)
+# email   — Python built-in
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # Driver Safety System v5 — Dependencies
+# # Install: pip install -r requirements.txt
+
+# opencv-python>=4.8.0
+# mediapipe>=0.10.0
+# numpy>=1.24.0
+# scipy>=1.11.0
+# ultralytics>=8.0.0
+# pyttsx3>=2.90
+# PyYAML>=6.0
+# pywin32>=300        # Windows TTS ke liye
+# requests>=2.28.0    # Telegram alerts ke liye
+
+# # NOTE: smtplib aur email — Python built-in hain, install nahi karne
+# # NOTE: Twilio REMOVE kar diya — ab Gmail + Telegram use ho raha hai
+
+
+
+
+
+
+
+
+
+
+
+# # Driver Safety System v5 — Dependencies
+# # Install with: pip install -r requirements.txt
+
+# opencv-python>=4.8.0
+# mediapipe>=0.10.0
+# numpy>=1.24.0
+# scipy>=1.11.0
+# ultralytics>=8.0.0       # YOLOv8
+# pyttsx3>=2.90            # Text-to-speech
+# PyYAML>=6.0              # Config file parsing

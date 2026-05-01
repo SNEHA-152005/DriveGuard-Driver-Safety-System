@@ -1,0 +1,2 @@
+session_date,duration_seconds,total_frames,avg_ear,avg_mar,blink_count,yawn_count,head_alert_count,drowsy_frames,drowsy_percent,yawn_frames,distracted_frames,distracted_percent,phone_frames,avg_fatigue_score,max_fatigue_score,risk_level
+2026-04-23 09:27:22,180.3,3388,0.242,0.385,41,7,2,989,29.2,806,1967,58.1,52,26.2,84.8,MODERATE

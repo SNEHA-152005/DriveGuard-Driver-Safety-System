@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DriveGuard — Live Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080c10;--bg2:#0d1117;--bg3:#161b22;
+  --border:#21262d;--border2:#30363d;
+  --text:#e6edf3;--muted:#8b949e;
+  --cyan:#00d4ff;--green:#3fb950;--yellow:#d29922;
+  --orange:#f0883e;--red:#f85149;--purple:#bc8cff;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;}
+.app{position:relative;z-index:1;}
+
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 28px;border-bottom:1px solid var(--border);
+  background:rgba(13,17,23,0.95);backdrop-filter:blur(10px);
+  position:sticky;top:0;z-index:100;}
+.logo{font-family:'Orbitron',monospace;font-size:17px;font-weight:900;
+  letter-spacing:2px;color:var(--cyan);display:flex;align-items:center;gap:10px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);
+  box-shadow:0 0 12px var(--cyan);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.3;transform:scale(.6);}}
+.nav-links{display:flex;gap:8px;}
+.nav-links a{padding:6px 16px;border-radius:6px;font-weight:600;font-size:13px;
+  letter-spacing:1px;text-decoration:none;color:var(--muted);
+  border:1px solid transparent;transition:all .2s;}
+.nav-links a:hover,.nav-links a.active{color:var(--cyan);border-color:var(--cyan);
+  background:rgba(0,212,255,.06);}
+.session-badge{font-family:'Share Tech Mono',monospace;font-size:12px;
+  padding:4px 12px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);}
+.session-badge.live{border-color:var(--green);color:var(--green);
+  box-shadow:0 0 8px rgba(63,185,80,.3);}
+
+/* Alert banner */
+#alert-banner{display:none;padding:12px 24px;margin:0 28px 16px;
+  border-radius:8px;border:1px solid var(--red);
+  background:rgba(248,81,73,.08);color:var(--red);
+  font-family:'Orbitron',monospace;font-size:13px;font-weight:700;
+  letter-spacing:2px;text-align:center;animation:blink 1s infinite;}
+@keyframes blink{0%,100%{border-color:var(--red);}50%{border-color:transparent;}}
+
+.container{padding:20px 28px;max-width:1400px;margin:0 auto;}
+
+/* Fatigue Hero */
+.fatigue-hero{display:flex;align-items:center;gap:24px;padding:22px 24px;
+  border-radius:14px;border:1px solid var(--border2);background:var(--bg2);
+  margin-bottom:16px;position:relative;overflow:hidden;}
+.fatigue-hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 15% 50%,rgba(0,212,255,.05),transparent 60%);
+  pointer-events:none;}
+
+/* Score ring */
+.score-ring-wrap{position:relative;flex-shrink:0;}
+.score-ring{width:130px;height:130px;transform:rotate(-90deg);}
+.score-ring-bg{fill:none;stroke:var(--border2);stroke-width:10;}
+.score-ring-fill{fill:none;stroke-width:10;stroke-linecap:round;
+  stroke-dasharray:360;stroke-dashoffset:360;transition:stroke-dashoffset .6s,stroke .4s;}
+.score-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.score-num{font-family:'Orbitron',monospace;font-size:30px;font-weight:900;line-height:1;transition:color .4s;}
+.score-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;}
+
+.fatigue-info{flex:1;}
+.level-badge{display:inline-block;padding:3px 14px;border-radius:20px;
+  font-family:'Orbitron',monospace;font-size:11px;font-weight:700;
+  letter-spacing:2px;margin-bottom:10px;transition:all .4s;}
+.fatigue-desc{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:14px;}
+.fatigue-stats{display:flex;gap:20px;}
+.fstat{text-align:center;}
+.fstat-num{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:var(--cyan);}
+.fstat-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;}
+
+/* Grid */
+.grid{display:grid;gap:14px;margin-bottom:14px;}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g2{grid-template-columns:repeat(2,1fr);}
+
+/* Card */
+.card{background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:18px;transition:border-color .2s;}
+.card:hover{border-color:var(--border2);}
+.card-title{font-size:10px;font-weight:600;letter-spacing:2px;
+  color:var(--muted);text-transform:uppercase;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;}
+.card-title .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);}
+
+/* Metric */
+.metric-val{font-family:'Share Tech Mono',monospace;font-size:34px;
+  line-height:1;margin-bottom:6px;transition:color .3s;}
+.metric-sub{font-size:11px;color:var(--muted);}
+
+/* Progress bar */
+.pbar-wrap{margin-top:12px;}
+.pbar-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:5px;}
+.pbar-track{height:5px;background:var(--border2);border-radius:3px;overflow:hidden;}
+.pbar-fill{height:100%;border-radius:3px;transition:width .4s,background .4s;}
+
+/* Status grid */
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.status-item{display:flex;align-items:center;gap:8px;padding:10px 12px;
+  border-radius:8px;border:1px solid var(--border);background:var(--bg3);transition:all .3s;}
+.status-item.active{border-color:var(--red);background:rgba(248,81,73,.07);
+  box-shadow:0 0 10px rgba(248,81,73,.12);}
+.status-item.active .sdot{background:var(--red);box-shadow:0 0 6px var(--red);}
+.sdot{width:9px;height:9px;border-radius:50%;background:var(--border2);transition:all .3s;}
+.sname{font-size:12px;font-weight:600;}
+.sval{font-size:10px;color:var(--muted);font-family:'Share Tech Mono',monospace;}
+
+/* Pose */
+.pose-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.pose-item{text-align:center;padding:10px 6px;border-radius:8px;background:var(--bg3);}
+.pose-axis{font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:4px;}
+.pose-val{font-family:'Share Tech Mono',monospace;font-size:18px;transition:color .3s;}
+
+/* Counts */
+.counts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.count-item{text-align:center;padding:14px 6px;border-radius:10px;
+  background:var(--bg3);border:1px solid var(--border);}
+.count-num{font-family:'Orbitron',monospace;font-size:26px;font-weight:700;color:var(--cyan);}
+.count-lbl{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:1px;}
+
+/* Latest session summary */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.scard{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:14px;text-align:center;}
+.scard-num{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;}
+.scard-lbl{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:1px;}
+
+/* Graph area */
+.graph-section{background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:18px;margin-bottom:14px;}
+.graph-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.gtab{padding:5px 13px;border-radius:6px;border:1px solid var(--border2);
+  background:transparent;color:var(--muted);font-family:'Rajdhani',sans-serif;
+  font-size:12px;font-weight:600;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.gtab:hover,.gtab.active{color:var(--cyan);border-color:var(--cyan);
+  background:rgba(0,212,255,.05);}
+.graph-wrap{background:var(--bg3);border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.graph-wrap img{width:100%;display:block;}
+.graph-empty{padding:40px;text-align:center;color:var(--muted);
+  font-family:'Share Tech Mono',monospace;font-size:12px;}
+
+/* Offline banner */
+#offline-banner{display:none;padding:10px 24px;margin:0 0 14px;
+  border-radius:8px;border:1px solid var(--yellow);
+  background:rgba(210,153,34,.08);color:var(--yellow);
+  font-size:13px;text-align:center;}
+
+@media(max-width:900px){.g3,.g2{grid-template-columns:1fr;}.summary-grid{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="logo"><div class="logo-dot"></div>DRIVEGUARD</div>
+  <nav class="nav-links">
+    <a href="/" class="active">LIVE</a>
+    <a href="/history">HISTORY</a>
+  </nav>
+  <div class="session-badge" id="session-badge">STANDBY</div>
+</header>
+
+<div class="container">
+  <div id="offline-banner">
+    Session ended — showing last recorded data.
+    <a href="/history" style="color:var(--cyan);margin-left:8px;">View full history →</a>
+  </div>
+  <div id="alert-banner"><span id="alert-text"></span></div>
+
+  <!-- Fatigue Hero -->
+  <div class="fatigue-hero">
+    <div class="score-ring-wrap">
+      <svg class="score-ring" viewBox="0 0 130 130">
+        <circle class="score-ring-bg" cx="65" cy="65" r="57"/>
+        <circle class="score-ring-fill" id="ring-fill" cx="65" cy="65" r="57"/>
+      </svg>
+      <div class="score-center">
+        <div class="score-num" id="score-num">0</div>
+        <div class="score-lbl">/ 100</div>
+      </div>
+    </div>
+    <div class="fatigue-info">
+      <div class="level-badge" id="level-badge">STANDBY</div>
+      <div class="fatigue-desc" id="level-desc">Waiting for session to start...</div>
+      <div class="fatigue-stats">
+        <div class="fstat"><div class="fstat-num" id="s-blinks">0</div><div class="fstat-lbl">BLINKS</div></div>
+        <div class="fstat"><div class="fstat-num" id="s-yawns">0</div><div class="fstat-lbl">YAWNS</div></div>
+        <div class="fstat"><div class="fstat-num" id="s-head">0</div><div class="fstat-lbl">HEAD ALERTS</div></div>
+        <div class="fstat"><div class="fstat-num" id="s-fps">0</div><div class="fstat-lbl">FPS</div></div>
+        <div class="fstat"><div class="fstat-num" id="s-time">00:00</div><div class="fstat-lbl">SESSION</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 1 -->
+  <div class="grid g3">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>EYE ASPECT RATIO</div>
+      <div class="metric-val" id="ear-val">0.000</div>
+      <div class="metric-sub">Threshold 0.25 — below = closing</div>
+      <div class="pbar-wrap">
+        <div class="pbar-lbl"><span>Drowsy Risk</span><span id="ear-pct">0%</span></div>
+        <div class="pbar-track"><div class="pbar-fill" id="ear-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>MOUTH ASPECT RATIO</div>
+      <div class="metric-val" id="mar-val">0.000</div>
+      <div class="metric-sub">Threshold 0.65 — above = yawning</div>
+      <div class="pbar-wrap">
+        <div class="pbar-lbl"><span>Yawn Risk</span><span id="mar-pct">0%</span></div>
+        <div class="pbar-track"><div class="pbar-fill" id="mar-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>DETECTION STATUS</div>
+      <div class="status-grid">
+        <div class="status-item" id="s-drowsy"><div class="sdot"></div>
+          <div><div class="sname">DROWSY</div><div class="sval" id="sv-drowsy">OK</div></div></div>
+        <div class="status-item" id="s-yawn"><div class="sdot"></div>
+          <div><div class="sname">YAWNING</div><div class="sval" id="sv-yawn">OK</div></div></div>
+        <div class="status-item" id="s-head"><div class="sdot"></div>
+          <div><div class="sname">HEAD</div><div class="sval" id="sv-head">OK</div></div></div>
+        <div class="status-item" id="s-phone"><div class="sdot"></div>
+          <div><div class="sname">PHONE</div><div class="sval" id="sv-phone">CLEAR</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2 -->
+  <div class="grid g2">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>HEAD POSE</div>
+      <div class="pose-grid">
+        <div class="pose-item"><div class="pose-axis">PITCH</div><div class="pose-val" id="pose-pitch">+0.0°</div></div>
+        <div class="pose-item"><div class="pose-axis">YAW</div><div class="pose-val" id="pose-yaw">+0.0°</div></div>
+        <div class="pose-item"><div class="pose-axis">ROLL</div><div class="pose-val" id="pose-roll">+0.0°</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>SESSION COUNTS</div>
+      <div class="counts-grid">
+        <div class="count-item"><div class="count-num" id="c-blinks">0</div><div class="count-lbl">BLINKS</div></div>
+        <div class="count-item"><div class="count-num" id="c-yawns">0</div><div class="count-lbl">YAWNS</div></div>
+        <div class="count-item"><div class="count-num" id="c-head">0</div><div class="count-lbl">HEAD ALERTS</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Latest Session Summary -->
+  <div id="latest-summary-section" style="display:none;">
+    <div class="card-title" style="margin-bottom:10px;font-size:10px;letter-spacing:2px;color:var(--muted);">
+      <span class="dot" style="width:6px;height:6px;border-radius:50%;background:var(--cyan);display:inline-block;margin-right:8px;"></span>
+      LATEST SESSION SUMMARY
+    </div>
+    <div class="summary-grid" id="summary-grid"></div>
+  </div>
+
+  <!-- Latest Session Graph -->
+  <div class="graph-section" id="graph-section" style="display:none;">
+    <div class="card-title" style="margin-bottom:12px;">
+      <span class="dot"></span>SESSION GRAPH
+    </div>
+    <div class="graph-tabs" id="graph-tabs"></div>
+    <div class="graph-wrap" id="graph-wrap">
+      <div class="graph-empty">Loading graph...</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const CIRC = 2 * Math.PI * 57;
+const levelCfg = {
+  LOW:      {color:'#3fb950',bg:'rgba(63,185,80,.15)',  desc:'Driver is alert. All systems normal.'},
+  MODERATE: {color:'#d29922',bg:'rgba(210,153,34,.15)', desc:'Mild fatigue. Stay attentive.'},
+  HIGH:     {color:'#f0883e',bg:'rgba(240,136,62,.15)', desc:'High fatigue. Consider a break soon.'},
+  CRITICAL: {color:'#f85149',bg:'rgba(248,81,73,.15)',  desc:'CRITICAL! Stop the vehicle safely now.'},
+  STANDBY:  {color:'#8b949e',bg:'rgba(139,148,158,.1)', desc:'Waiting for session to start...'},
+};
+
+let latestSessionId = null;
+let currentMetric   = 'fatigue_score';
+let sessionWasActive = false;
+
+function col(el, c){ if(el) el.style.color = c; }
+
+function updateRing(score){
+  const fill = document.getElementById('ring-fill');
+  const lvl  = score<25?'LOW':score<50?'MODERATE':score<75?'HIGH':'CRITICAL';
+  fill.style.strokeDashoffset = CIRC - (score/100)*CIRC;
+  fill.style.stroke = levelCfg[lvl].color;
+}
+
+function setStatus(id, valId, active, label){
+  const el = document.getElementById(id);
+  const ve = document.getElementById(valId);
+  el.classList.toggle('active', active);
+  if(ve) ve.textContent = active ? label : (valId==='sv-phone'?'CLEAR':'OK');
+}
+
+function barColor(p){
+  if(p<40) return '#3fb950';
+  if(p<70) return '#d29922';
+  if(p<90) return '#f0883e';
+  return '#f85149';
+}
+
+// ── SSE ──────────────────────────────────────────────────────────────
+const es = new EventSource('/stream');
+es.onmessage = e => {
+  const d = JSON.parse(e.data);
+
+  // Session active check
+  const badge = document.getElementById('session-badge');
+  const offBanner = document.getElementById('offline-banner');
+  if(d.session_active){
+    sessionWasActive = true;
+    badge.textContent = 'LIVE  ' + (d.session_time||'');
+    badge.classList.add('live');
+    offBanner.style.display = 'none';
+  } else if(sessionWasActive){
+    badge.textContent = 'SESSION ENDED';
+    badge.classList.remove('live');
+    offBanner.style.display = 'block';
+    loadLatestSession();
+  }
+
+  const score = d.fatigue_score||0;
+  const lvl   = d.fatigue_level||'STANDBY';
+  const cfg   = levelCfg[lvl]||levelCfg.STANDBY;
+
+  // Score ring
+  document.getElementById('score-num').textContent = Math.round(score);
+  col(document.getElementById('score-num'), cfg.color);
+  updateRing(score);
+
+  const badge2 = document.getElementById('level-badge');
+  badge2.textContent      = lvl;
+  badge2.style.color      = cfg.color;
+  badge2.style.background = cfg.bg;
+  badge2.style.border     = '1px solid '+cfg.color;
+  document.getElementById('level-desc').textContent = cfg.desc;
+
+  // Alert
+  const ab = document.getElementById('alert-banner');
+  if(d.alert_msg){ ab.style.display='block'; document.getElementById('alert-text').textContent=d.alert_msg; }
+  else            { ab.style.display='none'; }
+
+  // EAR
+  const earEl = document.getElementById('ear-val');
+  earEl.textContent = (d.ear||0).toFixed(3);
+  const earP = Math.min(100, Math.max(0,(1-(d.ear||0.3)/0.35)*100));
+  document.getElementById('ear-bar').style.width = earP+'%';
+  document.getElementById('ear-bar').style.background = barColor(earP);
+  document.getElementById('ear-pct').textContent = Math.round(earP)+'%';
+  col(earEl, d.ear>0&&d.ear<0.25?'#f85149':'#3fb950');
+
+  // MAR
+  const marEl = document.getElementById('mar-val');
+  marEl.textContent = (d.mar||0).toFixed(3);
+  const marP = Math.min(100,((d.mar||0)/0.9)*100);
+  document.getElementById('mar-bar').style.width = marP+'%';
+  document.getElementById('mar-bar').style.background = barColor(marP);
+  document.getElementById('mar-pct').textContent = Math.round(marP)+'%';
+  col(marEl, d.mar>0.65?'#f85149':'#3fb950');
+
+  // Status
+  setStatus('s-drowsy','sv-drowsy', d.is_drowsy,     'DETECTED');
+  setStatus('s-yawn',  'sv-yawn',   d.is_yawning,    'DETECTED');
+  setStatus('s-head',  'sv-head',   d.is_distracted, 'DISTRACTED');
+  setStatus('s-phone', 'sv-phone',  d.phone_detected,'DETECTED');
+
+  // Head pose
+  ['pitch','yaw','roll'].forEach(k=>{
+    const el = document.getElementById('pose-'+k);
+    const v  = d[k]||0;
+    if(el){ el.textContent=(v>=0?'+':'')+v.toFixed(1)+'°';
+      col(el, Math.abs(v)>(k==='yaw'?30:20)?'#f85149':'#e6edf3'); }
+  });
+
+  // Counts
+  document.getElementById('c-blinks').textContent = d.blink_count||0;
+  document.getElementById('c-yawns').textContent  = d.yawn_count||0;
+  document.getElementById('c-head').textContent   = d.head_alerts||0;
+  document.getElementById('s-blinks').textContent = d.blink_count||0;
+  document.getElementById('s-yawns').textContent  = d.yawn_count||0;
+  document.getElementById('s-head').textContent   = d.head_alerts||0;
+  document.getElementById('s-fps').textContent    = Math.round(d.fps||0);
+  document.getElementById('s-time').textContent   = d.session_time||'00:00';
+};
+
+// ── Latest session summary + graph ────────────────────────────────────
+async function loadLatestSession(){
+  try{
+    const resp = await fetch('/api/latest_summary');
+    const s    = await resp.json();
+    if(!s.session_id) return;
+    latestSessionId = s.session_id;
+
+    // Summary cards
+    const grid = document.getElementById('summary-grid');
+    const riskColors = {LOW:'#3fb950',MODERATE:'#d29922',HIGH:'#f0883e',CRITICAL:'#f85149'};
+    const cards = [
+      {num: s.duration_seconds+'s',       lbl:'DURATION',       col:'#00d4ff'},
+      {num: s.avg_fatigue_score,          lbl:'AVG FATIGUE',    col: riskColors[s.risk_level]||'#8b949e'},
+      {num: s.max_fatigue_score,          lbl:'PEAK FATIGUE',   col:'#f85149'},
+      {num: s.drowsy_percent+'%',         lbl:'DROWSY TIME',    col:'#f0883e'},
+      {num: s.distracted_percent+'%',     lbl:'DISTRACTED',     col:'#d29922'},
+      {num: s.blink_count,               lbl:'BLINKS',         col:'#00d4ff'},
+      {num: s.yawn_count,                lbl:'YAWNS',          col:'#bc8cff'},
+      {num: s.risk_level,                lbl:'RISK LEVEL',     col: riskColors[s.risk_level]||'#8b949e'},
+    ];
+    grid.innerHTML = cards.map(c=>
+      `<div class="scard">
+        <div class="scard-num" style="color:${c.col}">${c.num}</div>
+        <div class="scard-lbl">${c.lbl}</div>
+      </div>`
+    ).join('');
+
+    document.getElementById('latest-summary-section').style.display='block';
+
+    // Graph tabs
+    const metrics = ['fatigue_score','ear','mar','pitch','yaw','drowsy','phone'];
+    const labels  = {'fatigue_score':'Fatigue','ear':'EAR','mar':'MAR',
+                     'pitch':'Pitch','yaw':'Yaw','drowsy':'Drowsy','phone':'Phone'};
+    const tabs = document.getElementById('graph-tabs');
+    tabs.innerHTML = metrics.map((m,i)=>
+      `<button class="gtab${i===0?' active':''}"
+         onclick="loadGraph('${m}',this)">${labels[m]}</button>`
+    ).join('');
+
+    document.getElementById('graph-section').style.display='block';
+    loadGraph('fatigue_score', tabs.querySelector('.active'));
+  } catch(e){ console.error(e); }
+}
+
+function loadGraph(metric, btn){
+  if(!latestSessionId) return;
+  currentMetric = metric;
+  document.querySelectorAll('.gtab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const wrap = document.getElementById('graph-wrap');
+  wrap.innerHTML = '<div class="graph-empty">Generating graph...</div>';
+  const img = new Image();
+  img.onload  = ()=>{ wrap.innerHTML=''; wrap.appendChild(img); };
+  img.onerror = ()=>{ wrap.innerHTML='<div class="graph-empty">No data available</div>'; };
+  img.style.width = '100%';
+  img.src = `/api/graph/${latestSessionId}/${metric}?t=${Date.now()}`;
+}
+
+// Load latest session on page load (session may have already ended)
+window.addEventListener('load', ()=>{ loadLatestSession(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session History — DriveGuard</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#080c10;--bg2:#0d1117;--bg3:#161b22;
+    --border:#21262d;--border2:#30363d;
+    --text:#e6edf3;--muted:#8b949e;
+    --cyan:#00d4ff;--green:#3fb950;--yellow:#d29922;
+    --orange:#f0883e;--red:#f85149;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0;}
+  .app{position:relative;z-index:1;}
+  header{display:flex;align-items:center;justify-content:space-between;
+    padding:16px 28px;border-bottom:1px solid var(--border);
+    background:rgba(13,17,23,0.9);backdrop-filter:blur(10px);
+    position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;
+    letter-spacing:2px;color:var(--cyan);text-shadow:0 0 20px rgba(0,212,255,0.3);
+    display:flex;align-items:center;gap:10px;}
+  .logo-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);
+    box-shadow:0 0 20px rgba(0,212,255,0.3);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
+  .nav-links{display:flex;gap:8px;}
+  .nav-links a{padding:6px 16px;border-radius:6px;font-weight:600;font-size:13px;
+    letter-spacing:1px;text-decoration:none;color:var(--muted);border:1px solid transparent;transition:all 0.2s;}
+  .nav-links a:hover,.nav-links a.active{color:var(--cyan);border-color:var(--cyan);
+    background:rgba(0,212,255,0.05);}
+  .container{padding:24px 28px;max-width:1400px;margin:0 auto;}
+  h1{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;
+    color:var(--cyan);margin-bottom:24px;letter-spacing:2px;}
+  .empty{padding:60px;text-align:center;color:var(--muted);
+    border:1px dashed var(--border2);border-radius:12px;}
+  /* Session cards */
+  .sessions{display:grid;gap:16px;}
+  .session-card{background:var(--bg2);border:1px solid var(--border);
+    border-radius:12px;overflow:hidden;transition:border-color 0.2s;}
+  .session-card:hover{border-color:var(--border2);}
+  .session-header{display:flex;align-items:center;justify-content:space-between;
+    padding:16px 20px;cursor:pointer;user-select:none;}
+  .session-header:hover{background:rgba(255,255,255,0.02);}
+  .session-date{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--muted);}
+  .session-title{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;
+    color:var(--text);margin-bottom:2px;}
+  .risk-badge{padding:3px 12px;border-radius:20px;font-size:11px;
+    font-family:'Orbitron',monospace;font-weight:700;letter-spacing:1px;}
+  .risk-LOW     {color:#3fb950;background:rgba(63,185,80,0.15);border:1px solid #3fb950;}
+  .risk-MODERATE{color:#d29922;background:rgba(210,153,34,0.15);border:1px solid #d29922;}
+  .risk-HIGH    {color:#f0883e;background:rgba(240,136,62,0.15);border:1px solid #f0883e;}
+  .risk-CRITICAL{color:#f85149;background:rgba(248,81,73,0.15);border:1px solid #f85149;}
+  .chevron{color:var(--muted);transition:transform 0.3s;font-size:18px;}
+  .session-card.open .chevron{transform:rotate(180deg);}
+  /* Stats row */
+  .session-stats{display:flex;gap:0;border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);}
+  .sstat{flex:1;padding:14px;text-align:center;border-right:1px solid var(--border);}
+  .sstat:last-child{border-right:none;}
+  .sstat-num{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:var(--cyan);}
+  .sstat-label{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+  /* Graphs */
+  .session-graphs{padding:20px;display:none;}
+  .session-card.open .session-graphs{display:block;}
+  .graph-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .gtab{padding:6px 14px;border-radius:6px;border:1px solid var(--border2);
+    background:transparent;color:var(--muted);font-family:'Rajdhani',sans-serif;
+    font-size:13px;font-weight:600;letter-spacing:1px;cursor:pointer;transition:all 0.2s;}
+  .gtab:hover,.gtab.active{color:var(--cyan);border-color:var(--cyan);
+    background:rgba(0,212,255,0.05);}
+  .graph-img-wrap{background:var(--bg3);border-radius:10px;overflow:hidden;
+    border:1px solid var(--border);}
+  .graph-img-wrap img{width:100%;display:block;}
+  .graph-loading{padding:40px;text-align:center;color:var(--muted);
+    font-family:'Share Tech Mono',monospace;}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="logo"><div class="logo-dot"></div>DRIVEGUARD</div>
+  <nav class="nav-links">
+    <a href="/">LIVE</a>
+    <a href="/history" class="active">HISTORY</a>
+  </nav>
+  <div></div>
+</header>
+
+<div class="container">
+  <h1>SESSION HISTORY</h1>
+
+  {% if sessions %}
+  <div class="sessions">
+    {% for s in sessions %}
+    <div class="session-card" id="card-{{ loop.index }}">
+      <div class="session-header" onclick="toggleCard('{{ loop.index }}','{{ s.session_id }}')">
+        <div>
+          <div class="session-title">Session — {{ s.session_id.replace('_',' ') }}</div>
+          <div class="session-date">{{ s.session_date }}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div>
+            <div style="font-size:11px;color:var(--muted);text-align:right;">DURATION</div>
+            <div style="font-family:'Share Tech Mono',monospace;color:var(--text);">{{ s.duration_seconds }}s</div>
+          </div>
+          <span class="risk-badge risk-{{ s.risk_level }}">{{ s.risk_level }}</span>
+          <span class="chevron">▾</span>
+        </div>
+      </div>
+
+      <div class="session-stats">
+        <div class="sstat"><div class="sstat-num">{{ s.blink_count }}</div><div class="sstat-label">BLINKS</div></div>
+        <div class="sstat"><div class="sstat-num">{{ s.yawn_count }}</div><div class="sstat-label">YAWNS</div></div>
+        <div class="sstat"><div class="sstat-num">{{ s.head_alert_count }}</div><div class="sstat-label">HEAD ALERTS</div></div>
+        <div class="sstat"><div class="sstat-num">{{ s.drowsy_percent }}%</div><div class="sstat-label">DROWSY TIME</div></div>
+        <div class="sstat"><div class="sstat-num">{{ s.distracted_percent }}%</div><div class="sstat-label">DISTRACTED</div></div>
+        <div class="sstat"><div class="sstat-num">{{ s.avg_fatigue_score }}</div><div class="sstat-label">AVG FATIGUE</div></div>
+        <div class="sstat"><div class="sstat-num">{{ s.max_fatigue_score }}</div><div class="sstat-label">PEAK FATIGUE</div></div>
+      </div>
+
+      <div class="session-graphs" id="graphs-{{ loop.index }}">
+        <div class="graph-tabs">
+          <button class="gtab active" onclick="loadGraph('{{ loop.index }}','{{ s.session_id }}','fatigue_score',this)">Fatigue Score</button>
+          <button class="gtab" onclick="loadGraph('{{ loop.index }}','{{ s.session_id }}','ear',this)">EAR</button>
+          <button class="gtab" onclick="loadGraph('{{ loop.index }}','{{ s.session_id }}','mar',this)">MAR</button>
+          <button class="gtab" onclick="loadGraph('{{ loop.index }}','{{ s.session_id }}','pitch',this)">Pitch</button>
+          <button class="gtab" onclick="loadGraph('{{ loop.index }}','{{ s.session_id }}','yaw',this)">Yaw</button>
+        </div>
+        <div class="graph-img-wrap" id="graph-wrap-{{ loop.index }}">
+          <div class="graph-loading">Loading graph...</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty">
+    <div style="font-family:'Orbitron',monospace;font-size:16px;margin-bottom:8px;">NO SESSIONS YET</div>
+    <div>Run the system and complete a session to see history here.</div>
+  </div>
+  {% endif %}
+</div>
+</div>
+
+<script>
+function toggleCard(idx, sid) {
+  const card = document.getElementById('card-' + idx);
+  const isOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+  if (!isOpen) {
+    loadGraph(idx, sid, 'fatigue_score', document.querySelector('#card-' + idx + ' .gtab'));
+  }
+}
+
+function loadGraph(idx, sid, metric, btn) {
+  // Tab active
+  const tabs = document.querySelectorAll('#card-' + idx + ' .gtab');
+  tabs.forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const wrap = document.getElementById('graph-wrap-' + idx);
+  wrap.innerHTML = '<div class="graph-loading">Generating graph...</div>';
+
+  const img = new Image();
+  img.onload = () => { wrap.innerHTML = ''; wrap.appendChild(img); };
+  img.onerror = () => { wrap.innerHTML = '<div class="graph-loading">No data available</div>'; };
+  img.style.width = '100%';
+  img.src = '/api/graph/' + sid + '/' + metric + '?t=' + Date.now();
+}
+</script>
+</body>
+</html>
