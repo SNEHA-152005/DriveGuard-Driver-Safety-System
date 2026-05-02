@@ -329,7 +329,7 @@ max_fatigue_score, risk_level
 - Live fatigue dashboard
 - Emergency alert system
 
-[▶ Watch Demo](videos/demo_Recording.mp4)
+[▶ Watch Demo](videos/demo_vedio.mp4)
 
 
 ## Known Limitations
@@ -348,7 +348,7 @@ max_fatigue_score, risk_level
 > would be used for reliable 24/7 detection.
 
 ## License
-  
+
 Copyright © 2026 Sneha.
 
 This project is for educational and portfolio purposes only.
