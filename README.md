@@ -315,6 +315,22 @@ max_fatigue_score, risk_level
 
 ---
 
+## Screenshots
+
+### Driver Monitoring Window
+
+![Dashboard](images/dashboard.png)
+
+
+## Demo
+
+- Real-time drowsiness detection
+- Phone distraction alerts
+- Live fatigue dashboard
+- Emergency alert system
+
+[▶ Watch Demo](videos/demo_Recording.mp4)
+
 
 ## Known Limitations
 
@@ -332,14 +348,15 @@ max_fatigue_score, risk_level
 > would be used for reliable 24/7 detection.
 
 ## License
+  
+Copyright © 2026 Sneha.
 
-MIT License — free to use, modify, and distribute.
-
----
+This project is for educational and portfolio purposes only.
+Unauthorized copying, modification, or redistribution is not permitted.
 
 ## Author
 
-Built with OpenCV, MediaPipe, YOLOv8, Flask, and Python.
+Developed by Sneha kansal using OpenCV, MediaPipe, YOLOv8, Flask, and Python.
 
 
 
