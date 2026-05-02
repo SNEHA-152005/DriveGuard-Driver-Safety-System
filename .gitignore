@@ -11,6 +11,18 @@ __pycache__/
 # Model files
 *.pt
 
+# Session reports
+reports/sessions/
+
 # OS files
 .DS_Store
 Thumbs.db
+
+# Config — credentials hain isme, kabhi push mat karo
+config.yaml
+
+# Calibration profiles
+calibration/
+
+# Debug files
+debug_emergency.py
