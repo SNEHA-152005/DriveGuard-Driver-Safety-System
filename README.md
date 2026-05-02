@@ -349,10 +349,9 @@ max_fatigue_score, risk_level
 
 ## License
 
-Copyright © 2026 Sneha.
+This project is licensed under the MIT License © 2026 Sneha.
 
-This project is for educational and portfolio purposes only.
-Unauthorized copying, modification, or redistribution is not permitted.
+You are free to use, modify and share this project with credit.
 
 ## Author
 
