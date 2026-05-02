@@ -329,7 +329,7 @@ max_fatigue_score, risk_level
 - Live fatigue dashboard
 - Emergency alert system
 
-[▶ Watch Demo](videos/demo_vedio.mp4)
+[![Watch Demo](https://img.youtube.com/vi/IWAQU8ky7jo/0.jpg)](https://youtu.be/IWAQU8ky7jo)
 
 
 ## Known Limitations
